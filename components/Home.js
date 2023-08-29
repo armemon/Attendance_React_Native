@@ -77,8 +77,8 @@ const Chart = ({route}) => {
                 data: chartData,
               },
               {
-                data: [totalMeeting], //highest graph value
-                withDots: false, //a flage to make it hidden
+                data: Array(memberNames.length).fill(totalMeeting), // Array with totalMeeting repeated for each member
+                withDots: false,
               },
             ],
           }}

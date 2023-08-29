@@ -6,6 +6,7 @@ import {
   Image,
   TextInput,
   TouchableOpacity,
+  ScrollView,
 } from 'react-native';
 import {Input} from 'react-native-elements';
 import {useNavigation} from '@react-navigation/native';
