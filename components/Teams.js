@@ -31,14 +31,20 @@ const Teams = ({route}) => {
 
   const deleteMember = (name, index) => {
     const updatedDomainDatasets = {...domainDatasets};
-    updatedDomainDatasets[selectedDataset] = updatedDomainDatasets[
-      selectedDataset
-    ].filter(member => member.memberName !== name);
-    const newSelectedNewDomain = [...selectedNewDomain];
-    newSelectedNewDomain.splice(memberIndex, 1);
-    setSelectedNewDomain(newSelectedNewDomain);
-    DeviceEventEmitter.emit('DeleteMember', updatedDomainDatasets);
-    console.log(updatedDomainDatasets);
+      const memberIndex = updatedDomainDatasets[selectedDataset].findIndex(
+        member => member.memberName === name,
+      );
+
+      if (memberIndex !== -1) {
+        updatedDomainDatasets[selectedDataset].splice(memberIndex, 1);
+        const newSelectedNewDomain = [...selectedNewDomain];
+        newSelectedNewDomain.splice(memberIndex, 1);
+        setSelectedNewDomain(newSelectedNewDomain);
+        DeviceEventEmitter.emit('DeleteMember', updatedDomainDatasets);
+        // console.log(updatedDomainDatasets);
+      } else {
+        Alert.alert('Member not found', 'Member already deleted or Shifted');
+      }
   };
 
   const shiftMember = (name, newDomain) => {
@@ -55,18 +61,18 @@ const Teams = ({route}) => {
         member.domain = newDomain;
         updatedDomainDatasets[selectedDataset].splice(memberIndex, 1);
         const newSelectedNewDomain = [...selectedNewDomain];
-newSelectedNewDomain.splice(memberIndex, 1);
-setSelectedNewDomain(newSelectedNewDomain);
+        newSelectedNewDomain.splice(memberIndex, 1);
+        setSelectedNewDomain(newSelectedNewDomain);
         updatedDomainDatasets[newDomain].push(member);
         DeviceEventEmitter.emit('ShiftMember', updatedDomainDatasets);
-        console.log(updatedDomainDatasets);
+        // console.log(updatedDomainDatasets);
       } else {
         Alert.alert('Member not found', 'Member already deleted or Shifted');
       }
     }
   };
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <View style={styles.pickerContainer}>
         <Picker
           style={styles.picker}
@@ -78,49 +84,48 @@ setSelectedNewDomain(newSelectedNewDomain);
           ))}
         </Picker>
       </View>
-      <ScrollView>
-        <View style={styles.table}>
-          <View style={[styles.row, styles.grayRow]}>
-            <Text style={styles.headerCell}>#</Text>
-            <Text style={styles.headerCell}>Name</Text>
-            <Text style={styles.domainPicker}>Domain</Text>
-            <Text style={styles.headerCell}>Shift</Text>
-            <Text style={styles.headerCell}>Delete</Text>
-          </View>
-          {domainDatasets[selectedDataset].map((data, index) => (
-            <View key={index} style={styles.row}>
-              <Text style={styles.cell}>{index + 1}</Text>
-              <Text style={styles.cell}>{data['memberName']}</Text>
-              <Picker
-                style={styles.domainPicker}
-                selectedValue={selectedNewDomain[index]}
-                onValueChange={itemValue => {
-                  const updatedSelectedNewDomain = [...selectedNewDomain];
-                  updatedSelectedNewDomain[index] = itemValue;
-                  setSelectedNewDomain(updatedSelectedNewDomain);
-                  console.log('Newdomain', selectedNewDomain);
-                }}>
-                {Object.keys(domainDatasets).map(option => (
-                  <Picker.Item key={option} label={option} value={option} />
-                ))}
-              </Picker>
-              <TouchableOpacity
-                onPress={() =>
-                  shiftMember(data.memberName, selectedNewDomain[index])
-                }
-                style={styles.shiftButton}>
-                <Text style={styles.shiftButtonText}>Shift</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => deleteMember(data.memberName, index)}
-                style={styles.deleteButton}>
-                <Text style={styles.deleteButtonText}>Delete</Text>
-              </TouchableOpacity>
-            </View>
-          ))}
+
+      <View style={styles.table}>
+        <View style={[styles.row, styles.grayRow]}>
+          <Text style={styles.headerCell}>#</Text>
+          <Text style={styles.headerCell}>Name</Text>
+          <Text style={styles.domainPicker}>Domain</Text>
+          <Text style={styles.headerCell}>Shift</Text>
+          <Text style={styles.headerCell}>Delete</Text>
         </View>
-      </ScrollView>
-    </View>
+        {domainDatasets[selectedDataset].map((data, index) => (
+          <View key={index} style={styles.row}>
+            <Text style={styles.cell}>{index + 1}</Text>
+            <Text style={styles.cell}>{data['memberName']}</Text>
+            <Picker
+              style={styles.domainPicker}
+              selectedValue={selectedNewDomain[index]}
+              onValueChange={itemValue => {
+                const updatedSelectedNewDomain = [...selectedNewDomain];
+                updatedSelectedNewDomain[index] = itemValue;
+                setSelectedNewDomain(updatedSelectedNewDomain);
+                // console.log('Newdomain', selectedNewDomain);
+              }}>
+              {Object.keys(domainDatasets).map(option => (
+                <Picker.Item key={option} label={option} value={option} />
+              ))}
+            </Picker>
+            <TouchableOpacity
+              onPress={() =>
+                shiftMember(data.memberName, selectedNewDomain[index])
+              }
+              style={styles.shiftButton}>
+              <Text style={styles.shiftButtonText}>Shift</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => deleteMember(data.memberName, index)}
+              style={styles.deleteButton}>
+              <Text style={styles.deleteButtonText}>Delete</Text>
+            </TouchableOpacity>
+          </View>
+        ))}
+      </View>
+    </ScrollView>
   );
 };
 

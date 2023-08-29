@@ -70,7 +70,7 @@ export const initialDomainDatasets = {
           { name: 'Ahmed', present: 1, reason: '', rating: '5' },
           { name: 'Maaz', present: 1, reason: '', rating: '4' },
           { name: 'Hamza', present: 0, reason: 'Not Well', rating: '0' },
-          { name: 'Ghulam2', present: 1, reason: '', rating: '3' },
+          { name: 'Ghujcslam2', present: 1, reason: '', rating: '3' },
         ],
       },
       {
@@ -91,10 +91,11 @@ export const initialDomainDatasets = {
         members: [
           { name: 'ALi hassan', present: 1, reason: '', rating: '5' },
           { name: 'Ghulam', present: 0, reason: '', rating: '0' },
-          { name: 'Ahmed', present: 1, reason: '', rating: '5' },
+          { name: 'Ahmhhjed', present: 1, reason: '', rating: '5' },
           { name: 'Maaz', present: 1, reason: '', rating: '4' },
           { name: 'Hamza', present: 1, reason: '', rating: '0' },
           { name: 'Ghulam2', present: 0, reason: '', rating: '0' },
+          { name: 'AR', present: 1, reason: '', rating: '3' },
         ],
       },
     ],

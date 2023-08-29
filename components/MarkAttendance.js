@@ -17,23 +17,24 @@ import {Dropdown} from 'react-native-element-dropdown';
 import {SafeAreaView} from 'react-native-safe-area-context';
 
 const MeetingForm = ({route}) => {
-  const { domainDatasets } = route.params;
-  console.log("Domain", domainDatasets)
+  const {domainDatasets} = route.params;
+  // console.log("Domain", domainDatasets)
   const [selectedDataset, setSelectedDataset] = useState('IT');
   const [date, setDate] = useState(new Date().toLocaleDateString());
   const [meetingName, setMeetingName] = useState('');
   const [show, setShow] = useState(false);
-  const [members, setMembers] = useState( domainDatasets[selectedDataset].map((member) => ({
-    name: member.memberName,
-    present: 0,
-    rating: '0',
-    reason: '',
-  })),
+  const [members, setMembers] = useState(
+    domainDatasets[selectedDataset].map(member => ({
+      name: member.memberName,
+      present: 0,
+      rating: '0',
+      reason: '',
+    })),
   );
 
   useEffect(() => {
     setMembers(
-      domainDatasets[selectedDataset].map((member) => ({
+      domainDatasets[selectedDataset].map(member => ({
         name: member.memberName,
         present: 0,
         rating: '0',
@@ -49,15 +50,29 @@ const MeetingForm = ({route}) => {
 
   const handleSave = () => {
     if (meetingName.trim() == '') {
-      Alert.alert('Please Write Meeting Name', "Meeting Name cannot be Empty");
-    }
-    else {
-      const NewMeeting = { meetingName: meetingName, date: date, members: members };
-      console.log('Submitted members:', NewMeeting);
+      Alert.alert('Please Write Meeting Name', 'Meeting Name cannot be Empty');
+    } else {
+      // const currentTime = new Date();
+      // const date = new Date(
+      //   date.getFullYear(),
+      //   date.getMonth(),
+      //   date.getDate(),
+      //   currentTime.getHours(),
+      //   currentTime.getMinutes(),
+      //   currentTime.getSeconds(),
+      // );
+      const NewMeeting = {
+        meetingName: meetingName,
+        date: date,
+        members: members,
+      };
       DeviceEventEmitter.emit('PushDataset', NewMeeting, selectedDataset);
-      Alert.alert('Submitted', `Meeting ${meetingName} (${Date}) Attendance Marked`);
+      Alert.alert(
+        'Submitted',
+        `Meeting ${meetingName} (${date}) Attendance Marked`,
+      );
       setMembers(
-        domainDatasets[selectedDataset].map((member) => ({
+        domainDatasets[selectedDataset].map(member => ({
           name: member.memberName,
           present: 0,
           rating: '0',
@@ -65,7 +80,6 @@ const MeetingForm = ({route}) => {
         })),
       );
       setMeetingName('');
-      Alert.alert('Submitted', `Meeting ${meetingName} (${date}) Attendance Marked`);
     }
   };
 
@@ -73,7 +87,6 @@ const MeetingForm = ({route}) => {
   // console.log(Object.keys(datasets).map(option => ({ label: option , value:option  })))
   // console.log(Array.from({ length: domainDatasets[selectedDataset].length }, () => ({ })))
   return (
-    <>
       <ScrollView style={styles.container}>
         <View style={styles.pickerContainer}>
           <Dropdown
@@ -127,7 +140,7 @@ const MeetingForm = ({route}) => {
             placeholder="Name of meeting"
             id="search"
             onChangeText={text => setMeetingName(text)}
-            value= {meetingName}
+            value={meetingName}
           />
         </View>
         {domainDatasets[selectedDataset].map((member, index) => (
@@ -187,7 +200,6 @@ const MeetingForm = ({route}) => {
           <Button title="Submit" onPress={handleSave} />
         </View>
       </ScrollView>
-    </>
   );
 };
 

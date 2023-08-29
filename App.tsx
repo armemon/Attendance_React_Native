@@ -1,7 +1,7 @@
 import 'react-native-gesture-handler';
 import {useState, useEffect} from 'react';
-import {View, Text, Image, Alert, DeviceEventEmitter} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import {View, Text, Image, Alert, DeviceEventEmitter, ScrollView} from 'react-native';
+import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {NavigationContainer} from '@react-navigation/native';
 import {
   createDrawerNavigator,
@@ -78,21 +78,21 @@ export default function App() {
         const updatedDatasets = {...datasets};
         updatedDatasets[domain].push(eventData);
         setDatasets(updatedDatasets);
-        console.log('Emitted', datasets);
+        // console.log('Emitted', datasets);
       },
     );
     const ShiftMemberListener = DeviceEventEmitter.addListener(
       'ShiftMember',
       eventData => {
         setDomainDataset(eventData);
-        console.log('Teams EMitted', domainDatasets);
+        // console.log('Teams EMitted', domainDatasets);
       },
     );
     const DeleteMemberListener = DeviceEventEmitter.addListener(
       'DeleteMember',
       eventData => {
         setDomainDataset(eventData);
-        console.log('Teams EMitted', domainDatasets);
+        // console.log('Teams EMitted', domainDatasets);
       }
     );
 
@@ -107,10 +107,12 @@ export default function App() {
 
   return (
     <NavigationContainer>
+            <SafeAreaProvider>
+
       <Drawer.Navigator
         drawerContent={props => {
           return (
-            <SafeAreaView>
+        <>
               <View
                 style={{
                   height: 240,
@@ -149,7 +151,7 @@ export default function App() {
                 </Text>
               </View>
               <DrawerItemList {...props} />
-            </SafeAreaView>
+            </>
           );
         }}
         screenOptions={{
@@ -228,9 +230,11 @@ export default function App() {
             drawerIcon: () => <Icon3 name="logout" size={30} color="#fff" />,
           }}
           component={Logout}
-        />
-      </Drawer.Navigator>
+            />
+    
+        </Drawer.Navigator>
       <Footer />
+        </SafeAreaProvider>
     </NavigationContainer>
   );
 }
