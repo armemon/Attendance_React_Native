@@ -7,13 +7,15 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
+  DeviceEventEmitter
 } from 'react-native';
 import {Input} from 'react-native-elements';
 import {useNavigation} from '@react-navigation/native';
 
 
-const Logout = () => {
-const navigation = useNavigation();
+const Login = ({ navigation, route }) => {
+  // Use navigation and route here
+  // const { setAuthenticated } = route.params;
 
   return (
     <View style={styles.container}>
@@ -24,7 +26,7 @@ const navigation = useNavigation();
         <Text style={styles.heading}>ATTENDANCE SYSTEM</Text>
         <Input
           style={styles.input}
-          placeholder="Enter Username"
+          placeholder="Enter Email"
           placeholderTextColor="#999"
           // name="uname" // No need for this in React Native
           // required // No need for this in React Native
@@ -40,7 +42,9 @@ const navigation = useNavigation();
         <TouchableOpacity
           style={styles.button}
           onPress={() => {
-            navigation.navigate('Home');
+        DeviceEventEmitter.emit('Login', true);
+            // setAuthenticated(true)
+            // navigation.navigate('Home');
             // console.log('Log In Pressed');
           }}>
           <Text style={styles.buttonText}>Login</Text>
@@ -98,4 +102,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Logout;
+export default Login;

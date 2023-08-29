@@ -1,16 +1,8 @@
 import 'react-native-gesture-handler';
 import {useState, useEffect} from 'react';
-import {
-  View,
-  Text,
-  Image,
-  Alert,
-  DeviceEventEmitter,
-  ScrollView,
-} from 'react-native';
-import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
-import { useNavigation, NavigationContainer } from '@react-navigation/native';
-
+import {View, Text, Image, Alert, DeviceEventEmitter} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import {NavigationContainer} from '@react-navigation/native';
 import {
   createDrawerNavigator,
   DrawerContentScrollView,
@@ -30,19 +22,19 @@ import MarkAttendance from './components/MarkAttendance';
 import ViewAttendance from './components/ViewAttendance';
 import Footer from './components/Footer';
 
-import {initialDomainDatasets, initialDatasets} from './assets/data';
+import {
+  datasets,
+  domainDatasets,
+  setDatasets,
+  setDomainDataset,
+} from './assets/data';
 
 // const [domainDatasets, setDomainDataset] = useState(datasets)
 // const [datasets, setDataset] = useState(domainDatasets)
 
 const Drawer = createDrawerNavigator();
-const navigation = useNavigation
 
 export default function AppContent() {
-  const [domainDatasets, setDomainDataset] = useState(initialDomainDatasets);
-  const [datasets, setDatasets] = useState(initialDatasets);
-
-  // export {datasets, domainDatasets, setDatasets, setDomainDataset}
   const addDomainDataset = members => {
     const updatedDomainDatasets = {...domainDatasets};
     members.forEach(member => {
@@ -90,83 +82,16 @@ export default function AppContent() {
         // console.log('Emitted', datasets);
       },
     );
-    const ShiftMemberListener = DeviceEventEmitter.addListener(
-      'ShiftMember',
-      eventData => {
-        setDomainDataset(eventData);
-        // console.log('Teams EMitted', domainDatasets);
-      },
-    );
-    const DeleteMemberListener = DeviceEventEmitter.addListener(
-      'DeleteMember',
-      eventData => {
-        setDomainDataset(eventData);
-        // console.log('Teams EMitted', domainDatasets);
-      },
-    );
 
     return () => {
       addDomainListener.remove();
       editListener.remove();
       PushDatasetListener.remove();
-      ShiftMemberListener.remove();
-      DeleteMemberListener.remove();
     };
   }, []);
 
-  function CustomDrawerContent(props) {
-    return (
-      <>
-      {/* <DrawerContentScrollView {...props}> */}
-        <DrawerItemList {...props} />
-
-        <DrawerItem
-          labelStyle={{color: '#fff'}}
-          icon={() => <Icon3 name="logout" size={30} color="#fff" />}
-          label="Log Out"
-          onPress={() =>
-            Alert.alert(
-              'Log out',
-              'Do you want to logout?',
-              [
-                {
-                  text: 'Cancel',
-                  onPress: () => {
-                    return null;
-                  },
-                },
-                {
-                  text: 'Confirm',
-                  onPress: () => {
-                    // AsyncStorage.clear();
-                    DeviceEventEmitter.emit('Login', false);
-                    // props.navigation.navigate('Login')
-                    // navigation.navigate('Login');
-                  },
-                },
-              ],
-              {cancelable: false},
-            )
-          }
-        />
-        </>
-      // </DrawerContentScrollView>
-    );
-  }
-  // function CustomDrawerContent(props) {
-  //   return (
-  //     <>
-  //      {/* <DrawerContentScrollView {...props}> */}
-  //       <DrawerItemList {...props} />
-  //        <DrawerItem label="Help" onPress={() => Alert.alert('Link to help')} />
-  //      {/* </DrawerContentScrollView> */}
-  //     </>
-  //   );
-  // }
-
   return (
-    // <NavigationContainer>
-    <SafeAreaProvider>
+    <>
       <Drawer.Navigator
         drawerContent={props => {
           return (
@@ -188,7 +113,7 @@ export default function AppContent() {
                     width: 130,
                     borderRadius: 65,
                     // padding: 0,
-                    backgroundColor: '#fff',
+                    backgroundColor:'white'
                   }}
                 />
                 <Text
@@ -208,8 +133,7 @@ export default function AppContent() {
                   IT Director
                 </Text>
               </View>
-              {/* <DrawerItemList {...props} /> */}
-              <CustomDrawerContent {...props}/>
+              <DrawerItemList {...props} />
             </SafeAreaView>
           );
         }}
@@ -273,7 +197,7 @@ export default function AppContent() {
         />
         <Drawer.Screen
           name="ViewAttendance"
-          options={{
+          options={{ 
             drawerLabel: 'View Attendance',
             title: 'View Attendance',
             drawerIcon: () => <Icon name="calendar" size={30} color="#fff" />,
@@ -281,18 +205,17 @@ export default function AppContent() {
           component={ViewAttendance}
           initialParams={{datasets}} // Pass the datasets as initialParams
         />
-        {/* <Drawer.Screen
-          name="Login"
+        <Drawer.Screen
+          name="login"
           options={{
             drawerLabel: 'Log Out',
             title: 'Log In',
             drawerIcon: () => <Icon3 name="logout" size={30} color="#fff" />,
           }}
-          component={Login}
-        /> */}
+          component={login}
+        />
       </Drawer.Navigator>
       <Footer />
-    </SafeAreaProvider>
-    // </NavigationContainer>
+    </>
   );
 }

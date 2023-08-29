@@ -33,7 +33,7 @@ const Chart = ({route}) => {
         0,
       );
     });
-
+// console.log(chartData)
     setMemberNames(memberNames); // Update memberNames in the state
     setChartData(memberData);
     setTotalMeeting(numberMeetings);
@@ -66,6 +66,7 @@ const Chart = ({route}) => {
         horizontal={true}
         // contentOffset={{ x: 10000, y: 0 }} // i needed the scrolling to start from the end not the start
         showsHorizontalScrollIndicator={false} // to hide scroll bar
+        // contentContainerStyle={{ alignItems:"center", alignSelf: "center" }}
         // style={{marginTop: 30, marginLeft: 25, borderRadius: 0, paddingRight: 35}}
         contentContainerStyle={styles.container}>
         {/* <View style={styles.chartContainer}> */}
@@ -77,7 +78,7 @@ const Chart = ({route}) => {
                 data: chartData,
               },
               {
-                data: Array(memberNames.length).fill(totalMeeting), // Array with totalMeeting repeated for each member
+                data: [6], // Array with totalMeeting repeated for each member
                 withDots: false,
               },
             ],
