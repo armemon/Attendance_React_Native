@@ -2,20 +2,25 @@ import React, {useState, useEffect, useRef} from 'react';
 import {View, Text, StyleSheet, ScrollView} from 'react-native';
 import {Picker} from '@react-native-picker/picker';
 import {BarChart} from 'react-native-chart-kit';
+import { useSelector } from 'react-redux';
+import Loader from '../components/Loader';
 
-const Chart = ({route}) => {
-  const {datasets} = route.params;
-  const datasetKeys = Object.keys(datasets);
-  const [selectedDataset, setSelectedDataset] = useState('IT');
+const Chart = ({ route }) => {
+  const { meetingDataset, datasetloading } = useSelector(state => state.dataset);
+  const { user } = useSelector(state => state.auth);
+  const datasets = meetingDataset;
+  // if (datasetloading) {
+  //   return <Loader />; // Render the Loader if datasets are not available
+  // }
+  const datasetKeys = datasets ? Object.keys(datasets).filter(key => key !== '_id' && key !== '__v') : "";
+  const [selectedDataset, setSelectedDataset] = useState((user.domain == "Excom" || user.domain == "HR") ? 'IT' : user.domain);
   const [chartData, setChartData] = useState([]);
   const [memberNames, setMemberNames] = useState([]);
   const [totalMeeting, setTotalMeeting] = useState();
 
-  // console.log(datasetKeys);
-
   useEffect(() => {
-    updateChartData(selectedDataset);
-  }, [selectedDataset, route]);
+    datasets && updateChartData(selectedDataset);
+  }, [selectedDataset, meetingDataset]);
 
   const updateChartData = option => {
     const selectedDatasetData = datasets[option];
@@ -33,7 +38,7 @@ const Chart = ({route}) => {
         0,
       );
     });
-// console.log(chartData)
+    // console.log(chartData)
     setMemberNames(memberNames); // Update memberNames in the state
     setChartData(memberData);
     setTotalMeeting(numberMeetings);
@@ -49,19 +54,22 @@ const Chart = ({route}) => {
   //   pickerRef.current.blur();
   // }
   return (
-    // <ScrollView>
-    <>
+    !datasets ? <Loader /> :
+      <>
+        <View style={styles.container}>
+        {(true) &&
       <View style={styles.pickerContainer}>
         <Picker
           style={styles.picker}
           // ref={pickerRef}
           selectedValue={selectedDataset}
           onValueChange={itemValue => setSelectedDataset(itemValue)}>
-          {datasetKeys.map(option => (
+          { datasets && datasetKeys.map(option => (
             <Picker.Item key={option} label={option} value={option} />
           ))}
         </Picker>
       </View>
+     }
       <ScrollView
         horizontal={true}
         // contentOffset={{ x: 10000, y: 0 }} // i needed the scrolling to start from the end not the start
@@ -83,7 +91,7 @@ const Chart = ({route}) => {
               },
             ],
           }}
-          width={Math.max(chartData.length * 50, 350)} // Adjust as needed
+          width={Math.max(chartData.length * 60, 350)} // Adjust as needed
           height={220} // Adjust as needed
           yAxisLabel=""
           verticalLabelRotation={0}
@@ -105,14 +113,16 @@ const Chart = ({route}) => {
           }}
         />
         {/* </View> */}
-      </ScrollView>
+            </ScrollView>
+            </View>
     </>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    // alignItems: 'center',
+    flex:1,
+    alignItems: 'center',
     justifyContent: 'center',
   },
   picker: {
@@ -121,12 +131,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#5AE30B',
     // borderWidth: 1,
     borderRadius: 50,
-     // Adjust margin as needed
+    // Adjust margin as needed
     // paddingHorizontal: 10,
   },
   pickerContainer: {
-    marginTop:30,
-    height: 100,
+    marginTop: 10,
+    // height: 100,
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -15,11 +15,15 @@ import {RadioButton} from 'react-native-paper';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import {Dropdown} from 'react-native-element-dropdown';
 import {SafeAreaView} from 'react-native-safe-area-context';
+import { useSelector, useDispatch } from 'react-redux';
+import {addMeeting, loadDomainDataset, loadMeetingDataset} from '../redux/action';
 
 const MeetingForm = ({route}) => {
-  const {domainDatasets} = route.params;
+  const { domainDataset, loading1 } = useSelector(state => state.dataset);
+  const { user } = useSelector(state => state.auth);
+  const domainDatasets = domainDataset;
   // console.log("Domain", domainDatasets)
-  const [selectedDataset, setSelectedDataset] = useState('IT');
+  const [selectedDataset, setSelectedDataset] = useState((user.domain == "Excom" || user.domain == "HR") ? 'IT' : user.domain);
   const [date, setDate] = useState(new Date().toLocaleDateString());
   const [meetingName, setMeetingName] = useState('');
   const [show, setShow] = useState(false);
@@ -41,14 +45,15 @@ const MeetingForm = ({route}) => {
         reason: '',
       })),
     );
-  }, [selectedDataset, route, domainDatasets]);
+  }, [selectedDataset, domainDatasets]);
   const handleMemberChange = (index, field, value) => {
     const updatedMembers = [...members];
     updatedMembers[index][field] = value;
     setMembers(updatedMembers);
   };
+    const dispatch = useDispatch()
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (meetingName.trim() == '') {
       Alert.alert('Please Write Meeting Name', 'Meeting Name cannot be Empty');
     } else {
@@ -66,11 +71,13 @@ const MeetingForm = ({route}) => {
         date: date,
         members: members,
       };
-      DeviceEventEmitter.emit('PushDataset', NewMeeting, selectedDataset);
-      Alert.alert(
-        'Submitted',
-        `Meeting ${meetingName} (${date}) Attendance Marked`,
-      );
+      await dispatch(addMeeting(selectedDataset, NewMeeting))
+      dispatch(loadMeetingDataset())
+      // DeviceEventEmitter.emit('PushDataset', NewMeeting, selectedDataset);
+      // Alert.alert(
+      //   'Submitted',
+      //   `Meeting ${meetingName} (${date}) Attendance Marked`,
+      // );
       setMembers(
         domainDatasets[selectedDataset].map(member => ({
           name: member.memberName,
@@ -88,6 +95,7 @@ const MeetingForm = ({route}) => {
   // console.log(Array.from({ length: domainDatasets[selectedDataset].length }, () => ({ })))
   return (
       <ScrollView style={styles.container}>
+       {(user.domain == "Excom" || user.domain == "HR") &&
         <View style={styles.pickerContainer}>
           <Dropdown
             style={[styles.dropdown, styles.domainDropdown]}
@@ -95,7 +103,7 @@ const MeetingForm = ({route}) => {
             // selectedTextStyle={styles.selectedTextStyle}
             // inputSearchStyle={styles.inputSearchStyle}
             // iconStyle={styles.iconStyle}
-            data={Object.keys(domainDatasets).map(option => ({
+            data={Object.keys(domainDatasets).filter(key => key !== '_id' && key !== '__v').map(option => ({
               label: option,
               value: option,
             }))}
@@ -112,7 +120,7 @@ const MeetingForm = ({route}) => {
             // renderItem={renderItem}
           />
         </View>
-
+       }
         <View style={styles.dateMeetingContainer}>
           <Button
             onPress={() => {
@@ -169,7 +177,7 @@ const MeetingForm = ({route}) => {
                 // selectedTextStyle={styles.selectedTextStyle}
                 // inputSearchStyle={styles.inputSearchStyle}
                 // iconStyle={styles.iconStyle}
-                data={Array.from({length: 11}).map((_, i) => ({
+                data={Array.from({length: 6}).map((_, i) => ({
                   label: `${i}`,
                   value: `${i}`,
                 }))}
@@ -197,7 +205,8 @@ const MeetingForm = ({route}) => {
           </View>
         ))}
         <View style={styles.submitButtonContainer}>
-          <Button title="Submit" onPress={handleSave} />
+          <Button title="Submit" onPress={handleSave}  disabled={loading1}
+                loading={loading1}/>
         </View>
       </ScrollView>
   );
@@ -206,7 +215,7 @@ const MeetingForm = ({route}) => {
 const styles = StyleSheet.create({
   dropdown: {
     marginBottom: 16,
-    width: 90,
+    width: 110,
     height: 50,
     backgroundColor: 'white',
     borderRadius: 12,

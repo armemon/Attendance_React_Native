@@ -22,97 +22,61 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import Icon2 from 'react-native-vector-icons/AntDesign';
 import Icon3 from 'react-native-vector-icons/SimpleLineIcons';
 
-import Login from './components/Login';
-import Chart from './components/Home';
-import Teams from './components/Teams';
-import AddMember from './components/AddMember';
-import MarkAttendance from './components/MarkAttendance';
-import ViewAttendance from './components/ViewAttendance';
+import Login from './screens/Login';
+import Chart from './screens/Home';
+import Teams from './screens/Teams';
+import AddMember from './screens/AddMember';
+import MarkAttendance from './screens/MarkAttendance';
+import ViewAttendance from './screens/ViewAttendance';
 import Footer from './components/Footer';
-
-import {initialDomainDatasets, initialDatasets} from './assets/data';
 
 // const [domainDatasets, setDomainDataset] = useState(datasets)
 // const [datasets, setDataset] = useState(domainDatasets)
+// Inside your React Native component
+import axios from 'axios';
+import { useDispatch, useSelector } from 'react-redux';
+import { loadDomainDataset, loadMeetingDataset, loadUser, logout } from './redux/action';
+
+
+
 
 const Drawer = createDrawerNavigator();
 const navigation = useNavigation
 
 export default function AppContent() {
-  const [domainDatasets, setDomainDataset] = useState(initialDomainDatasets);
-  const [datasets, setDatasets] = useState(initialDatasets);
+  
+  const { message, user, loading, error } = useSelector(state => state.auth);
+  const { datasetloading, message1, error1 } = useSelector(state => state.dataset);
 
-  // export {datasets, domainDatasets, setDatasets, setDomainDataset}
-  const addDomainDataset = members => {
-    const updatedDomainDatasets = {...domainDatasets};
-    members.forEach(member => {
-      updatedDomainDatasets[member.domain].push({
-        memberName: member.name,
-        year: member.year,
-      });
-    });
-    setDomainDataset(updatedDomainDatasets);
-    // Now updatedDomainDatasets contains the updated data
-    // console.log(domainDatasets);
-  };
 
+  const dispatch = useDispatch();
   useEffect(() => {
-    const addDomainListener = DeviceEventEmitter.addListener(
-      'addDomainDataset',
-      eventData => {
-        addDomainDataset(eventData);
-      },
-    );
-
-    const editListener = DeviceEventEmitter.addListener(
-      'EditDataset',
-      (
-        updatedData,
-        selectedDataset,
-        editedMemberIndex,
-        selectedMeetingIndex,
-      ) => {
-        const updatedDatasets = {...datasets};
-        updatedDatasets[selectedDataset][selectedMeetingIndex]['members'][
-          editedMemberIndex
-        ] = updatedData;
-        setDatasets(updatedDatasets);
-        // console.log('Emitted', datasets);
-      },
-    );
-
-    const PushDatasetListener = DeviceEventEmitter.addListener(
-      'PushDataset',
-      (eventData, domain) => {
-        const updatedDatasets = {...datasets};
-        updatedDatasets[domain].push(eventData);
-        setDatasets(updatedDatasets);
-        // console.log('Emitted', datasets);
-      },
-    );
-    const ShiftMemberListener = DeviceEventEmitter.addListener(
-      'ShiftMember',
-      eventData => {
-        setDomainDataset(eventData);
-        // console.log('Teams EMitted', domainDatasets);
-      },
-    );
-    const DeleteMemberListener = DeviceEventEmitter.addListener(
-      'DeleteMember',
-      eventData => {
-        setDomainDataset(eventData);
-        // console.log('Teams EMitted', domainDatasets);
-      },
-    );
+    dispatch(loadUser());
+    dispatch(loadDomainDataset())
+    dispatch(loadMeetingDataset())
+    if (error) {
+      Alert.alert("User Error",error);
+      dispatch({ type: "clearError" });
+    }
+    if (error1) {
+      Alert.alert("Dataset Error",error1);
+      dispatch({ type: "clearError1" });
+    }
+  
+    if (message) {
+      Alert.alert("User Message", message);
+      dispatch({ type: "clearMessage" });
+    }
+    if (message1) {
+      Alert.alert("Dataset Message", message1);
+      dispatch({ type: "clearMessage1" });
+    }
 
     return () => {
-      addDomainListener.remove();
-      editListener.remove();
-      PushDatasetListener.remove();
-      ShiftMemberListener.remove();
-      DeleteMemberListener.remove();
-    };
-  }, []);
+      dispatch(loadDomainDataset())
+      dispatch(loadMeetingDataset())
+    }
+  }, [dispatch, error, error1, message, message1 ]);
 
   function CustomDrawerContent(props) {
     return (
@@ -138,10 +102,7 @@ export default function AppContent() {
                 {
                   text: 'Confirm',
                   onPress: () => {
-                    // AsyncStorage.clear();
-                    DeviceEventEmitter.emit('Login', false);
-                    // props.navigation.navigate('Login')
-                    // navigation.navigate('Login');
+                    dispatch(logout())
                   },
                 },
               ],
@@ -150,19 +111,8 @@ export default function AppContent() {
           }
         />
         </>
-      // </DrawerContentScrollView>
     );
   }
-  // function CustomDrawerContent(props) {
-  //   return (
-  //     <>
-  //      {/* <DrawerContentScrollView {...props}> */}
-  //       <DrawerItemList {...props} />
-  //        <DrawerItem label="Help" onPress={() => Alert.alert('Link to help')} />
-  //      {/* </DrawerContentScrollView> */}
-  //     </>
-  //   );
-  // }
 
   return (
     // <NavigationContainer>
@@ -181,8 +131,10 @@ export default function AppContent() {
                   borderBottomColor: 'lightgreen',
                   borderBottomWidth: 1,
                 }}>
+                 {/* {console.log(user.avatar)} */}
                 <Image
-                  source={require('./assets/logo.png')}
+                 
+                  source={user.avatar.url ? { uri: user.avatar.url } : require('./assets/logo.png') }
                   style={{
                     height: 130,
                     width: 130,
@@ -198,14 +150,14 @@ export default function AppContent() {
                     fontWeight: 'bold',
                     color: '#fff',
                   }}>
-                  AR Memon
+                  {user.name}
                 </Text>
                 <Text
                   style={{
                     fontSize: 16,
                     color: '#fff',
                   }}>
-                  IT Director
+                  {user.position || "Member"}
                 </Text>
               </View>
               {/* <DrawerItemList {...props} /> */}
@@ -236,29 +188,29 @@ export default function AppContent() {
             title: 'Home',
             drawerIcon: () => <Icon name="home" size={30} color="#fff" />,
           }}
-          component={Chart}
-          initialParams={{datasets}} // Pass the datasets as initialParams
+          component={Chart} 
         />
-        <Drawer.Screen
-          name="Teams"
-          options={{
-            drawerLabel: 'Teams',
-            title: 'Teams',
-            drawerIcon: () => <Icon name="group" size={30} color="#fff" />,
-          }}
-          component={Teams}
-          initialParams={{domainDatasets}} // Pass the datasets as initialParams
-        />
-        <Drawer.Screen
-          name="AddMember"
-          options={{
-            drawerLabel: 'Add Member',
-            title: 'Add Member',
-            drawerIcon: () => <Icon2 name="adduser" size={30} color="#fff" />,
-          }}
-          component={AddMember}
-          initialParams={{domainDatasets}} // Pass the datasets as initialParams
-        />
+        {(user.domain == "Excom" || user.domain == "HR") &&
+          <Drawer.Screen
+            name="Teams"
+            options={{
+              drawerLabel: 'Teams',
+              title: 'Teams',
+              drawerIcon: () => <Icon name="group" size={30} color="#fff" />,
+            }}
+            component={Teams}
+          />}
+        {(user.domain == "Excom" || user.domain == "HR") &&
+          <Drawer.Screen
+            name="AddMember"
+            options={{
+              drawerLabel: 'Add Member',
+              title: 'Add Member',
+              drawerIcon: () => <Icon2 name="adduser" size={30} color="#fff" />,
+            }}
+            component={AddMember}
+          />
+        }
         <Drawer.Screen
           name="MarkAttendance"
           options={{
@@ -269,7 +221,6 @@ export default function AppContent() {
             ),
           }}
           component={MarkAttendance}
-          initialParams={{domainDatasets}}
         />
         <Drawer.Screen
           name="ViewAttendance"
@@ -279,17 +230,7 @@ export default function AppContent() {
             drawerIcon: () => <Icon name="calendar" size={30} color="#fff" />,
           }}
           component={ViewAttendance}
-          initialParams={{datasets}} // Pass the datasets as initialParams
         />
-        {/* <Drawer.Screen
-          name="Login"
-          options={{
-            drawerLabel: 'Log Out',
-            title: 'Log In',
-            drawerIcon: () => <Icon3 name="logout" size={30} color="#fff" />,
-          }}
-          component={Login}
-        /> */}
       </Drawer.Navigator>
       <Footer />
     </SafeAreaProvider>

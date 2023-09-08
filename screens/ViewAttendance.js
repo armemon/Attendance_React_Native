@@ -1,85 +1,67 @@
 import React, {useState, useEffect} from 'react';
-import {View, Text, ScrollView, StyleSheet, DeviceEventEmitter} from 'react-native';
+import {View, Text, ScrollView, StyleSheet } from 'react-native';
 import {Picker} from '@react-native-picker/picker';
 import {RadioButton} from 'react-native-paper';
 import {Button, Input} from 'react-native-elements';
+import { useSelector, useDispatch } from 'react-redux';
+import {editMeeting, loadMeetingDataset} from '../redux/action';
 
 const ViewAttendance = ({route}) => {
-  const {datasets} = route.params;
-  const [selectedDataset, setSelectedDataset] = useState('IT');
-  const [selectedMeeting, setSelectedMeeting] = useState('');
-  const [selectedMeetingDate, setSelectedMeetingDate] = useState('');
+  const { meetingDataset } = useSelector(state => state.dataset);
+  const { user } = useSelector(state => state.auth);
+  const datasets = meetingDataset;
+  const [selectedDataset, setSelectedDataset] = useState((user.domain == "Excom" || user.domain == "HR") ? 'IT' : user.domain);
+  const [selectedMeetingID, setSelectedMeetingID] = useState('');
   const [editingMemberIndex, setEditingMemberIndex] = useState(-1);
   const [editedMembers, setEditedMembers] = useState({});
+  const [rowOpacities, setRowOpacities] = useState({});
+  
 
   useEffect(() => {
-    {
-      setSelectedMeeting(datasets[selectedDataset][0]['meetingName']);
-      setSelectedMeetingDate(datasets[selectedDataset][0]['date']);
-    }
-  }, [selectedDataset, datasets, route]);
+      setSelectedMeetingID(datasets[selectedDataset][0]['_id']);
+  }, [selectedDataset ]);
 
-  // useEffect(() => {
-  //   return () => {
-  //     DeviceEventEmitter.removeAllListeners('EditDataset');
-  //   };
-  // }, []);
+  useEffect(() => {
+    setRowOpacities({});
+  }, [meetingDataset, selectedDataset ]);
 
-  const handleSaveChanges = (editedMemberIndex, updatedData) => {
+  const dispatch = useDispatch()
+  const handleSaveChanges = async (editedMemberID) => {
     // Update the dataset with the new values
-    const updatedDatasets = {...datasets};
-    const selectedMeetingIndex = updatedDatasets[selectedDataset].findIndex(
-      meeting =>
-        meeting.meetingName === selectedMeeting &&
-        meeting.date === selectedMeetingDate,
-    );
-    // updatedDatasets[selectedDataset][selectedMeetingIndex].members[
-    //   editedMemberIndex
-    // ] = updatedData;
-    // console.log('updatedData', updatedData);
-
-    // console.log(
-    //   'updatedDatasets',
-    //   updatedDatasets[selectedDataset][selectedMeetingIndex],
-    // );
-    DeviceEventEmitter.emit(
-      'EditDataset',
-      updatedData,
-      selectedDataset,
-      editedMemberIndex,
-      selectedMeetingIndex,
-    );
+    setRowOpacities(prevOpacities => ({
+      ...prevOpacities,
+      [editedMemberID]: true, // Set to true to reduce opacity
+    }));
+    await dispatch(editMeeting(selectedDataset, selectedMeetingID, editedMemberID, editedMembers))
+    dispatch(loadMeetingDataset())
   };
 
   return (
     <View style={styles.container}>
       <ScrollView>
         <View style={styles.pickerContainer}>
+        {(user.domain == "Excom" || user.domain == "HR") &&
           <Picker
             style={styles.picker}
             selectedValue={selectedDataset}
             onValueChange={itemValue => setSelectedDataset(itemValue)}>
-            {Object.keys(datasets).map(option => (
+            {Object.keys(datasets).filter(key => key !== '_id' && key !== '__v').map(option => (
               <Picker.Item key={option} label={option} value={option} />
             ))}
           </Picker>
-
+        }
           <Picker
             style={styles.picker}
-            selectedValue={selectedMeetingDate}
+            selectedValue={selectedMeetingID}
             onValueChange={(itemValue, itemIndex) => {
-              setSelectedMeetingDate(itemValue);
-              setSelectedMeeting(
-                datasets[selectedDataset].find(
-                  meeting => meeting.date === itemValue,
-                )['meetingName'],
-              );
+              setEditingMemberIndex(-1);
+              setSelectedMeetingID(itemValue);
             }}>
             {datasets[selectedDataset].map(option => (
               <Picker.Item
-                key={option.meetingName + option.date}
+                key={option._id}
                 label={option.meetingName + ' - ' + option.date}
-                value={option.date}
+                value={option._id}
               />
             ))}
           </Picker>
@@ -89,15 +71,15 @@ const ViewAttendance = ({route}) => {
           {datasets[selectedDataset]
             ?.find(
               meeting =>
-                meeting.meetingName === selectedMeeting &&
-                meeting.date === selectedMeetingDate,
+                meeting._id === selectedMeetingID,
             )
             ?.members.map((memberData, memberIndex) => (
               <View
-                key={memberIndex}
+                key={memberData._id}
                 style={[
                   styles.memberContainer,
                   memberData['present'] ? '' : styles.red,
+                  rowOpacities[memberData._id] && { opacity: 0.5 },
                 ]}>
                 <Text style={styles.memberName}>{memberData['name']}</Text>
 
@@ -163,7 +145,7 @@ const ViewAttendance = ({route}) => {
                     title="Save"
                     onPress={() => {
                       // console.log('Save1', editedMembers);
-                      handleSaveChanges(memberIndex, editedMembers);
+                      handleSaveChanges( memberData._id);
                       setEditingMemberIndex(-1);
                     }}
                     buttonStyle={styles.editButton}
@@ -172,7 +154,7 @@ const ViewAttendance = ({route}) => {
                   <Button
                     title="Edit"
                     onPress={() => {
-                      updatedEditedMembers = {
+                     const updatedEditedMembers = {
                         name: memberData['name'],
                         present: memberData['present'] ? true : false,
                         reason: memberData['reason'],

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,17 +7,44 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  DeviceEventEmitter
+  DeviceEventEmitter,
+  Alert,
 } from 'react-native';
 import {Input} from 'react-native-elements';
 import {useNavigation} from '@react-navigation/native';
-
+import { useDispatch, useSelector } from 'react-redux';
+import { loadUser, login } from '../redux/action';
+import Loader from '../components/Loader';
 
 const Login = ({ navigation, route }) => {
-  // Use navigation and route here
-  // const { setAuthenticated } = route.params;
 
-  return (
+  const { isAuthenticated, error, loading} = useSelector(state => state.auth)
+
+  
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+
+  const dispatch = useDispatch()
+
+  const loginHandler = () => {
+    if (!email || !password) {
+      return Alert.alert("Enter All fields", "Email or Password Field is empty")
+    }
+    dispatch(login(email, password))
+  }
+  
+  useEffect(() => {
+    dispatch(loadUser())
+    // console.log(isAuthenticated, error)
+    if (error) {
+      alert(error)  
+      dispatch({type: "clearError"})
+    }
+  }, [error, dispatch, alert])
+
+  return (loading ? (
+    <Loader />
+  ) :
     <View style={styles.container}>
       <View style={styles.innercontainer}>
         <View style={styles.imgContainer}>
@@ -28,25 +55,22 @@ const Login = ({ navigation, route }) => {
           style={styles.input}
           placeholder="Enter Email"
           placeholderTextColor="#999"
-          // name="uname" // No need for this in React Native
-          // required // No need for this in React Native
+          value={email}
+          onChangeText={setEmail}
         />
         <Input
           style={styles.input}
           placeholder="Enter Password"
           placeholderTextColor="#999"
           secureTextEntry
-          // name="psw" // No need for this in React Native
-          // required // No need for this in React Native
+          value={password}
+          onChangeText={setPassword}
         />
         <TouchableOpacity
           style={styles.button}
-          onPress={() => {
-        DeviceEventEmitter.emit('Login', true);
-            // setAuthenticated(true)
-            // navigation.navigate('Home');
-            // console.log('Log In Pressed');
-          }}>
+          disabled={loading}
+                loading={loading}
+          onPress={loginHandler}>
           <Text style={styles.buttonText}>Login</Text>
         </TouchableOpacity>
       </View>

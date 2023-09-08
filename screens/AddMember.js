@@ -5,21 +5,37 @@ import {
   TextInput,
   Alert,
   TouchableOpacity,
+  Button,
   StyleSheet,
   ScrollView,
 } from 'react-native';
 import {Picker} from '@react-native-picker/picker';
 import Counter from "react-native-counters";
 import {DeviceEventEmitter} from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
+import { addDomainMember, loadDomainDataset } from '../redux/action';
 // import { ScrollView } from 'react-native-gesture-handler';
 
 const AddMember = ({route}) => {
-  const {domainDatasets} = route.params;
+  const { domainDataset, loading1 , error1, message1} = useSelector(state => state.dataset);
+  const domainDatasets = domainDataset;
   // const addDomainDataset = useContext(DomainDataContext);
   const [noAddNewMember, setNoAddNewMember] = useState(1);
   const [members, setMembers] = useState([
     {name: '', domain: 'IT', year: 'First'},
   ]);
+
+  // useEffect(() => {
+  //   // if (error1) {
+  //   //   alert(error1);
+  //   //   dispatch({type: 'clearError'});
+  //   // }
+  //   // if (message1) {
+  //   //   alert(message1);
+  //   //   dispatch({type: 'clearMessage1'});
+  //   // }
+  //   dispatch(loadDomainDataset());
+  // }, [ domainDatasets, dispatch, error1, message1]);
 
   const addNewMember = () => {
     const newMembers = Array.from({length: noAddNewMember}, () => ({
@@ -32,20 +48,21 @@ const AddMember = ({route}) => {
     setMembers(trimmedMembers);
   };
 
+  const dispatch = useDispatch()
+
   const updateMember = (index, field, value) => {
     const updatedMembers = [...members];
     updatedMembers[index][field] = value;
     setMembers(updatedMembers);
   };
-  // useEffect(() => {
-  //   return () => {
-  //     DeviceEventEmitter.removeAllListeners('event.testEvent2');
-  //   };
-  // }, []);
-  const submitButton = (e) => {
+
+  const submitButton = () => {
     const membersWithNames = members.filter(member => member.name.trim() !== '');
-    DeviceEventEmitter.emit('addDomainDataset', membersWithNames);
-    Alert.alert('Members Added', `Added ${membersWithNames.length} Member(s)`);
+    membersWithNames.forEach(member => {
+      dispatch(addDomainMember(member.domain, member.name, member.year))
+    })
+    
+    // Alert.alert('Members Added', `Added ${membersWithNames.length} Member(s)`);
     setNoAddNewMember(1)
     addNewMember()
     setMembers([
@@ -86,7 +103,7 @@ const AddMember = ({route}) => {
               style={styles.cell}
               selectedValue={member.domain}
               onValueChange={value => updateMember(index, 'domain', value)}>
-              {Object.keys(domainDatasets).map(option => (
+              {Object.keys(domainDatasets).filter(key => key !== '_id' && key !== '__v').map(option => (
                 <Picker.Item key={option} label={option} value={option} />
               ))}
             </Picker>
@@ -102,12 +119,16 @@ const AddMember = ({route}) => {
           </View>
         ))}
       </ScrollView>
-      <TouchableOpacity
+      <View style={styles.submitButtonContainer}>
+      <Button
         style={styles.submitButton}
-        onPress={() => submitButton(members)}
-      >
-        <Text style={styles.submitButtonText}>Submit</Text>
-      </TouchableOpacity>
+        onPress={()=> submitButton()}
+        disabled={loading1}
+                loading={loading1}
+      title="Submit"
+        />
+        </View>
+      
     </View>
   );
 };
@@ -142,7 +163,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#ccc',
+    // borderColor: '#ccc',
     marginTop: 10,
   },
   row: {
@@ -171,6 +192,11 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: 'blue',
     borderRadius: 5,
+    width: 100,
+  },
+  submitButtonContainer: {
+    alignItems: 'center', // Center the button horizontally
+    // marginBottom: 50,
   },
   submitButtonText: {
     color: 'white',

@@ -9,9 +9,12 @@ import {
   Alert,
   DeviceEventEmitter,
 } from 'react-native';
+import {useDispatch, useSelector} from 'react-redux';
+import {deleteMember, loadDomainDataset, shiftMember} from '../redux/action';
 
 const Teams = ({route}) => {
-  const {domainDatasets} = route.params;
+  const {domainDataset, error1, message1} = useSelector(state => state.dataset);
+  const domainDatasets = domainDataset;
   const [selectedDataset, setSelectedDataset] = useState('IT');
   const [selectedNewDomain, setSelectedNewDomain] = useState(
     Array.from(
@@ -19,57 +22,77 @@ const Teams = ({route}) => {
       () => selectedDataset,
     ),
   );
+  const [rowOpacities, setRowOpacities] = useState({});
 
+  // useEffect(() => {
+  //   // if (error1) {
+  //   //   Alert.alert(error1);
+  //   //   dispatch({type: 'clearError'});
+  //   // }
+  //   // if (message1) {
+  //   //   Alert.alert(message1);
+  //   //   dispatch({type: 'clearMessage1'});
+  //   // }
+  //   dispatch(loadDomainDataset());
+  // }, [selectedDataset, domainDatasets, dispatch, error1, message1]);
+
+
+  // Initialize opacities for all rows to false
   useEffect(() => {
+    const initialOpacities = {};
+    domainDatasets[selectedDataset].forEach(data => {
+      initialOpacities[data._id] = false;
+    });
+    setRowOpacities(initialOpacities);
     setSelectedNewDomain(
       Array.from(
         {length: domainDatasets[selectedDataset].length},
         () => selectedDataset,
       ),
     );
-  }, [selectedDataset, domainDatasets, route]);
+  }, [selectedDataset]);
 
-  const deleteMember = (name, index) => {
-    const updatedDomainDatasets = {...domainDatasets};
-      const memberIndex = updatedDomainDatasets[selectedDataset].findIndex(
-        member => member.memberName === name,
-      );
+  const dispatch = useDispatch();
 
-      if (memberIndex !== -1) {
-        updatedDomainDatasets[selectedDataset].splice(memberIndex, 1);
-        const newSelectedNewDomain = [...selectedNewDomain];
-        newSelectedNewDomain.splice(memberIndex, 1);
-        setSelectedNewDomain(newSelectedNewDomain);
-        DeviceEventEmitter.emit('DeleteMember', updatedDomainDatasets);
-        // console.log(updatedDomainDatasets);
-      } else {
-        Alert.alert('Member not found', 'Member already deleted or Shifted');
-      }
+  const deletemember = async (id, index) => {
+    // updatedDomainDatasets[selectedDataset].splice(memberIndex, 1);
+    // console.log(id);
+    setRowOpacities(prevOpacities => ({
+      ...prevOpacities,
+      [id]: true, // Set to true to reduce opacity
+    }));
+    await dispatch(deleteMember(selectedDataset, id));
+    const newSelectedNewDomain = [...selectedNewDomain];
+    newSelectedNewDomain.splice(index, 1);
+    setSelectedNewDomain(newSelectedNewDomain);
+    // DeviceEventEmitter.emit('DeleteMember', updatedDomainDatasets);
+    // console.log(updatedDomainDatasets);
+    dispatch(loadDomainDataset());
   };
 
-  const shiftMember = (name, newDomain) => {
+  const shiftmember = async (id, newDomain, index) => {
     if (newDomain == selectedDataset) {
       Alert.alert('Not Shifted', 'New Domain is same as previous one');
     } else {
-      const updatedDomainDatasets = {...domainDatasets};
-      const memberIndex = updatedDomainDatasets[selectedDataset].findIndex(
-        member => member.memberName === name,
-      );
+      // const member = updatedDomainDatasets[selectedDataset][memberIndex];
+      // member.domain = newDomain;
+      // updatedDomainDatasets[selectedDataset].splice(memberIndex, 1);
 
-      if (memberIndex !== -1) {
-        const member = updatedDomainDatasets[selectedDataset][memberIndex];
-        member.domain = newDomain;
-        updatedDomainDatasets[selectedDataset].splice(memberIndex, 1);
-        const newSelectedNewDomain = [...selectedNewDomain];
-        newSelectedNewDomain.splice(memberIndex, 1);
-        setSelectedNewDomain(newSelectedNewDomain);
-        updatedDomainDatasets[newDomain].push(member);
-        DeviceEventEmitter.emit('ShiftMember', updatedDomainDatasets);
-        // console.log(updatedDomainDatasets);
-      } else {
-        Alert.alert('Member not found', 'Member already deleted or Shifted');
-      }
+      // console.log(id);
+      setRowOpacities(prevOpacities => ({
+        ...prevOpacities,
+        [id]: true, // Set to true to reduce opacity
+      }));
+      // updatedDomainDatasets[newDomain].push(member);
+      await dispatch(shiftMember(selectedDataset, newDomain, id));
+      const newSelectedNewDomain = [...selectedNewDomain];
+      newSelectedNewDomain.splice(index, 1);
+      setSelectedNewDomain(newSelectedNewDomain);
+      // DeviceEventEmitter.emit('ShiftMember', updatedDomainDatasets);
+      // console.log(updatedDomainDatasets);
+      dispatch(loadDomainDataset());
     }
+    
   };
   return (
     <ScrollView style={styles.container}>
@@ -79,9 +102,11 @@ const Teams = ({route}) => {
           // ref={pickerRef}
           selectedValue={selectedDataset}
           onValueChange={itemValue => setSelectedDataset(itemValue)}>
-          {Object.keys(domainDatasets).map(option => (
-            <Picker.Item key={option} label={option} value={option} />
-          ))}
+          {Object.keys(domainDatasets)
+            .filter(key => key !== '_id' && key !== '__v')
+            .map(option => (
+              <Picker.Item key={option} label={option} value={option} />
+            ))}
         </Picker>
       </View>
 
@@ -94,7 +119,10 @@ const Teams = ({route}) => {
           <Text style={styles.headerCell}>Delete</Text>
         </View>
         {domainDatasets[selectedDataset].map((data, index) => (
-          <View key={index} style={styles.row}>
+          <View key={data._id} style={[
+      styles.row,
+      rowOpacities[data._id] && { opacity: 0.5 }, // Reduce opacity if rowOpacities[data._id] is true
+    ]}>
             <Text style={styles.cell}>{index + 1}</Text>
             <Text style={styles.cell}>{data['memberName']}</Text>
             <Picker
@@ -104,21 +132,22 @@ const Teams = ({route}) => {
                 const updatedSelectedNewDomain = [...selectedNewDomain];
                 updatedSelectedNewDomain[index] = itemValue;
                 setSelectedNewDomain(updatedSelectedNewDomain);
-                // console.log('Newdomain', selectedNewDomain);
               }}>
-              {Object.keys(domainDatasets).map(option => (
-                <Picker.Item key={option} label={option} value={option} />
-              ))}
+              {Object.keys(domainDatasets)
+                .filter(key => key !== '_id' && key !== '__v')
+                .map(option => (
+                  <Picker.Item key={option} label={option} value={option} />
+                ))}
             </Picker>
             <TouchableOpacity
               onPress={() =>
-                shiftMember(data.memberName, selectedNewDomain[index])
-              }
+                shiftmember(data._id, selectedNewDomain[index], index)
+              } // Pass memberId (data._id) to shiftmember
               style={styles.shiftButton}>
               <Text style={styles.shiftButtonText}>Shift</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => deleteMember(data.memberName, index)}
+              onPress={() => deletemember(data._id, index)} // Pass memberId (data._id) to deletemember
               style={styles.deleteButton}>
               <Text style={styles.deleteButtonText}>Delete</Text>
             </TouchableOpacity>
@@ -201,53 +230,3 @@ const styles = StyleSheet.create({
 });
 
 export default Teams;
-
-// import React from 'react';
-// import { View, Text, StyleSheet } from 'react-native';
-
-// const Teams = () => {
-//   return (
-//     <View style={styles.container}>
-//       <Text style={styles.heading}>Welcome to the Teams Screen</Text>
-//       <View style={styles.content}>
-//         <Text style={styles.text}>
-//           This is the content of your Teams screen.
-//         </Text>
-//       </View>
-//     </View>
-//   );
-// };
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//     backgroundColor: '#f0f0f0',
-//     padding: 20,
-//   },
-//   heading: {
-//     fontSize: 24,
-//     fontWeight: 'bold',
-//     marginBottom: 20,
-//   },
-//   content: {
-//     backgroundColor: '#fff',
-//     borderRadius: 10,
-//     padding: 20,
-//     shadowColor: '#000',
-//     shadowOffset: {
-//       width: 0,
-//       height: 2,
-//     },
-//     shadowOpacity: 0.25,
-//     shadowRadius: 3.84,
-//     elevation: 5,
-//   },
-//   text: {
-//     fontSize: 18,
-//     color: '#333',
-//   },
-// });
-
-// export default Teams;

@@ -1,4 +1,13 @@
+chexkbox from react-native-paper
+flex-direction row
+elevation (box-shadow)
+border-radius
+marginvertical
 
+container style flex background align justify
+dialog from paper
+avatar from paper
+email verifiactionn
 {
   "name": "AttendenceApp",
   "version": "0.0.1",
