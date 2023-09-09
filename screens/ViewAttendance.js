@@ -7,7 +7,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import {editMeeting, loadMeetingDataset} from '../redux/action';
 
 const ViewAttendance = ({route}) => {
-  const { meetingDataset } = useSelector(state => state.dataset);
+  const { meetingDataset, loading1 } = useSelector(state => state.dataset);
   const { user } = useSelector(state => state.auth);
   const datasets = meetingDataset;
   const [selectedDataset, setSelectedDataset] = useState((user.domain == "Excom" || user.domain == "HR") ? 'IT' : user.domain);
@@ -143,6 +143,8 @@ const ViewAttendance = ({route}) => {
                 {editingMemberIndex === memberIndex ? (
                   <Button
                     title="Save"
+                    disabled={loading1}
+                loading={loading1}
                     onPress={() => {
                       // console.log('Save1', editedMembers);
                       handleSaveChanges( memberData._id);

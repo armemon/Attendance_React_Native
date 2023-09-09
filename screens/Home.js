@@ -9,9 +9,6 @@ const Chart = ({ route }) => {
   const { meetingDataset, datasetloading } = useSelector(state => state.dataset);
   const { user } = useSelector(state => state.auth);
   const datasets = meetingDataset;
-  // if (datasetloading) {
-  //   return <Loader />; // Render the Loader if datasets are not available
-  // }
   const datasetKeys = datasets ? Object.keys(datasets).filter(key => key !== '_id' && key !== '__v') : "";
   const [selectedDataset, setSelectedDataset] = useState((user.domain == "Excom" || user.domain == "HR") ? 'IT' : user.domain);
   const [chartData, setChartData] = useState([]);
@@ -38,30 +35,21 @@ const Chart = ({ route }) => {
         0,
       );
     });
-    // console.log(chartData)
-    setMemberNames(memberNames); // Update memberNames in the state
+   
+    setMemberNames(memberNames); 
     setChartData(memberData);
     setTotalMeeting(numberMeetings);
   };
 
-  // const pickerRef = useRef();
-
-  // function open() {
-  //   pickerRef.current.focus();
-  // }
-
-  // function close() {
-  //   pickerRef.current.blur();
-  // }
+ 
   return (
     !datasets ? <Loader /> :
       <>
         <View style={styles.container}>
-        {(true) &&
+        {(user.domain == "Excom" || user.domain == "HR") &&
       <View style={styles.pickerContainer}>
         <Picker
           style={styles.picker}
-          // ref={pickerRef}
           selectedValue={selectedDataset}
           onValueChange={itemValue => setSelectedDataset(itemValue)}>
           { datasets && datasetKeys.map(option => (
@@ -72,12 +60,11 @@ const Chart = ({ route }) => {
      }
       <ScrollView
         horizontal={true}
-        // contentOffset={{ x: 10000, y: 0 }} // i needed the scrolling to start from the end not the start
-        showsHorizontalScrollIndicator={false} // to hide scroll bar
-        // contentContainerStyle={{ alignItems:"center", alignSelf: "center" }}
-        // style={{marginTop: 30, marginLeft: 25, borderRadius: 0, paddingRight: 35}}
+      
+        showsHorizontalScrollIndicator={false} 
+      
         contentContainerStyle={styles.container}>
-        {/* <View style={styles.chartContainer}> */}
+   
         <BarChart
           data={{
             labels: memberNames,
@@ -91,8 +78,8 @@ const Chart = ({ route }) => {
               },
             ],
           }}
-          width={Math.max(chartData.length * 60, 350)} // Adjust as needed
-          height={220} // Adjust as needed
+          width={Math.max(chartData.length * 60, 350)} 
+          height={220} 
           yAxisLabel=""
           verticalLabelRotation={0}
           yAxisInterval={1}
@@ -112,7 +99,6 @@ const Chart = ({ route }) => {
             paddingRight: 35,
           }}
         />
-        {/* </View> */}
             </ScrollView>
             </View>
     </>
@@ -126,70 +112,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   picker: {
-    width: 300, // Adjust width as needed
-    // height: 40, // Adjust height as needed
+    width: 300, 
     backgroundColor: '#5AE30B',
-    // borderWidth: 1,
     borderRadius: 50,
-    // Adjust margin as needed
-    // paddingHorizontal: 10,
   },
   pickerContainer: {
     marginTop: 10,
-    // height: 100,
     alignItems: 'center',
     justifyContent: 'center',
   },
 });
 
 export default Chart;
-
-// import React from 'react';
-// import { View, Text, StyleSheet } from 'react-native';
-
-// const Home = () => {
-//   return (
-//     <View style={styles.container}>
-//       <Text style={styles.heading}>Welcome to the Home Screen</Text>
-//       <View style={styles.content}>
-//         <Text style={styles.text}>
-//           This is the content of your Home screen.
-//         </Text>
-//       </View>
-//     </View>
-//   );
-// };
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//     backgroundColor: '#f0f0f0',
-//     padding: 20,
-//   },
-//   heading: {
-//     fontSize: 24,
-//     fontWeight: 'bold',
-//     marginBottom: 20,
-//   },
-//   content: {
-//     backgroundColor: '#fff',
-//     borderRadius: 10,
-//     padding: 20,
-//     shadowColor: '#000',
-//     shadowOffset: {
-//       width: 0,
-//       height: 2,
-//     },
-//     shadowOpacity: 0.25,
-//     shadowRadius: 3.84,
-//     elevation: 5,
-//   },
-//   text: {
-//     fontSize: 18,
-//     color: '#333',
-//   },
-// });
-
-// export default Home;
